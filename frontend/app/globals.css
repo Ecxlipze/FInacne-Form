@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-ink font-sans antialiased;
+  }
+  /* Visible keyboard focus everywhere — accessibility floor. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-verify ring-offset-2 ring-offset-surface;
+  }
+}
+
+@layer components {
+  .field-label {
+    @apply block text-sm font-medium text-ink mb-1.5;
+  }
+  .field-input {
+    @apply w-full rounded-md border border-line bg-white px-3 py-2.5 text-ink
+           placeholder:text-muted/60 focus:border-verify transition-colors;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm text-danger;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-ink px-5 py-2.5
+           font-medium text-white hover:bg-ink/90 disabled:opacity-50 transition-colors;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-md border border-line
+           bg-white px-5 py-2.5 font-medium text-ink hover:bg-line/40 transition-colors;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
