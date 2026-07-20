@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { applySecurity } from './middleware/security';
 import authRoutes from './routes/authRoutes';
+import applicationRoutes from './routes/applicationRoutes';
 import { env } from './config/env';
 
 export function createApp(): Express {
@@ -18,8 +19,7 @@ export function createApp(): Express {
   });
 
   app.use('/api/admin', authRoutes);
-  // TODO: mount applicant router (save/resume/submit/upload) next
-  // app.use('/api/application', applicationRoutes);
+  app.use('/api', applicationRoutes); // /api/form/config, /api/application/*
 
   // Central error handler — never leak stack traces to clients.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -44,6 +44,9 @@ export interface ApplicationDoc extends Document {
   employmentStatus: string | null;
   incomeBand: IncomeBand;
 
+  // --- Applicant resume (magic link) ---
+  activeResumeNonce: string | null; // the only nonce that will validate a resume token
+
   // --- Consent + lifecycle ---
   consent: {
     privacyNoticeVersion: string;
@@ -75,6 +78,8 @@ const ApplicationSchema = new Schema<ApplicationDoc>(
 
     cnicIndex: { type: String, required: true, unique: true, index: true },
     ibanIndex: { type: String, default: null, index: true },
+
+    activeResumeNonce: { type: String, default: null },
 
     city: { type: String, default: null, index: true },
     employmentStatus: { type: String, default: null, index: true },

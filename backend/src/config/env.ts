@@ -38,6 +38,15 @@ export const env = {
   resumeTokenTtlHours: Number(process.env.RESUME_TOKEN_TTL_HOURS ?? 72),
 
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
+
+  // CAPTCHA (Cloudflare Turnstile). If unset in dev, verification is skipped with a warning.
+  turnstileSecret: process.env.TURNSTILE_SECRET ?? '',
+
+  // Abandoned drafts are purged after this many days (retention policy, Phase 4/22).
+  draftRetentionDays: Number(process.env.DRAFT_RETENTION_DAYS ?? 30),
+
+  // Current privacy-notice version the applicant consents to.
+  privacyNoticeVersion: process.env.PRIVACY_NOTICE_VERSION ?? '2026-01',
 } as const;
 
 // Validate everything eagerly so misconfig surfaces on startup.
