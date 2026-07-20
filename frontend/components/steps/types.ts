@@ -5,4 +5,5 @@ export interface StepProps {
   isFirst: boolean;
   isLast: boolean;
   saving: boolean;
+  applicationId: string | null; // available once autosave has created the draft
 }

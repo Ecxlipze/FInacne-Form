@@ -5,6 +5,8 @@ import type { StepProps } from '@/components/steps/types';
 import PersonalStep from '@/components/steps/PersonalStep';
 import ContactStep from '@/components/steps/ContactStep';
 import EmploymentStep from '@/components/steps/EmploymentStep';
+import DocumentsStep from '@/components/steps/DocumentsStep';
+import DeclarationStep from '@/components/steps/DeclarationStep';
 import PlaceholderStep from '@/components/steps/PlaceholderStep';
 
 export interface StepMeta {
@@ -33,6 +35,8 @@ const BUILT: Partial<Record<StepKey, React.ComponentType<StepProps>>> = {
   personal: PersonalStep,
   contact: ContactStep,
   employment: EmploymentStep,
+  documents: DocumentsStep,
+  declaration: DeclarationStep,
 };
 
 /** Derived from the shared STEP_ORDER so frontend and backend never drift. */
