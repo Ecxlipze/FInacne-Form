@@ -47,6 +47,18 @@ export const env = {
 
   // Current privacy-notice version the applicant consents to.
   privacyNoticeVersion: process.env.PRIVACY_NOTICE_VERSION ?? '2026-01',
+
+  // --- S3 (optional in dev; required to actually upload). Credentials come from IAM role / env. ---
+  awsRegion: process.env.AWS_REGION ?? '',
+  s3Bucket: process.env.S3_BUCKET ?? '',
+  s3UploadUrlTtl: Number(process.env.S3_UPLOAD_URL_TTL_SECONDS ?? 300),
+  s3DownloadUrlTtl: Number(process.env.S3_DOWNLOAD_URL_TTL_SECONDS ?? 120),
+
+  // Shared secret the virus-scanner uses to authenticate its callback.
+  scanCallbackSecret: process.env.SCAN_CALLBACK_SECRET ?? '',
+
+  // Run the retention purge inside the app process (dev/small deploys). Prefer external cron in prod.
+  enablePurgeCron: process.env.ENABLE_PURGE_CRON === 'true',
 } as const;
 
 // Validate everything eagerly so misconfig surfaces on startup.

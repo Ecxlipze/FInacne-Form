@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/adminApplicationController';
+import * as uploadCtrl from '../controllers/uploadController';
 import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = Router();
@@ -11,6 +12,8 @@ router.use(requireAuth);
 router.get('/dashboard', ctrl.dashboard);
 router.get('/applications', ctrl.list);
 router.get('/applications/:id', ctrl.detail);
+router.get('/applications/:id/documents', uploadCtrl.listDocuments);
+router.get('/uploads/:uploadId/download', uploadCtrl.downloadDocument);
 
 // Review actions — reviewers and super admins only.
 router.patch('/applications/:id/status', requireRole('reviewer', 'super_admin'), ctrl.changeStatus);

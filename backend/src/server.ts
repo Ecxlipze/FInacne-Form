@@ -1,11 +1,13 @@
 import { createApp } from './app';
 import { connectDb } from './config/db';
 import { env, validateEnv } from './config/env';
+import { startScheduler } from './jobs/scheduler';
 
 async function main(): Promise<void> {
   validateEnv(); // fail fast on missing secrets
   await connectDb();
   const app = createApp();
+  startScheduler();
   app.listen(env.port, () => {
     // eslint-disable-next-line no-console
     console.log(`[server] listening on :${env.port} (${env.nodeEnv})`);

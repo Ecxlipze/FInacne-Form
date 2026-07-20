@@ -9,10 +9,14 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "seed:admin": "tsx src/scripts/seedAdmin.ts",
+    "purge": "tsx src/jobs/purgeExpired.ts",
     "lint": "eslint . --ext .ts",
     "keygen": "node -e \"console.log('FIELD_ENCRYPTION_KEY=' + require('crypto').randomBytes(32).toString('base64')); console.log('BLIND_INDEX_KEY=' + require('crypto').randomBytes(32).toString('base64'))\""
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.658.0",
+    "@aws-sdk/s3-presigned-post": "^3.658.0",
+    "@aws-sdk/s3-request-presigner": "^3.658.0",
     "@finportal/shared": "*",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
@@ -26,6 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.0",
     "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -37,6 +42,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.5.0",
+    "@types/node-cron": "^3.0.11",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
   }

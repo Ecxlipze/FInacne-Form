@@ -1,6 +1,7 @@
 import { Application, ApplicationDoc, ApplicationStatus, IncomeBand } from '../models/Application';
 import { blindIndex } from '../utils/crypto';
 import { getDecryptedApplication, ApplicationFormData } from './applicationService';
+import { deleteForApplication } from './uploadService';
 import { normalizeCnic, normalizePhone } from '@finportal/shared';
 
 /** Fields safe to return in a list — NO decryption, only cleartext/masked metadata. */
@@ -151,9 +152,9 @@ export async function addNote(id: string, text: string, actor: ActorCtx): Promis
   return res.matchedCount > 0;
 }
 
-/** Subject erasure — permanent delete. (Also delete associated S3 objects once uploads exist.) */
+/** Subject erasure — permanent delete of the record and all associated documents. */
 export async function deleteApplication(id: string): Promise<boolean> {
-  // TODO: when uploads are implemented, delete the S3 objects for this application first.
+  await deleteForApplication(id); // remove S3 objects + upload metadata first
   const res = await Application.findByIdAndDelete(id);
   return !!res;
 }

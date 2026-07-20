@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { applySecurity } from './middleware/security';
 import authRoutes from './routes/authRoutes';
 import applicationRoutes from './routes/applicationRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 import adminApplicationRoutes from './routes/adminApplicationRoutes';
 import { env } from './config/env';
 
@@ -22,6 +23,7 @@ export function createApp(): Express {
   app.use('/api/admin', authRoutes);
   app.use('/api/admin', adminApplicationRoutes);
   app.use('/api', applicationRoutes); // /api/form/config, /api/application/*
+  app.use('/api', uploadRoutes); // /api/upload/*
 
   // Central error handler — never leak stack traces to clients.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
