@@ -22,17 +22,32 @@ function deriveIncomeBand(monthly?: number): IncomeBand {
   return 'gt_2m';
 }
 
+/** Mask a full name for list display: "Ali Khan" -> "A** K***". */
+function maskName(name?: string): string | null {
+  if (!name) return null;
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0] + '*'.repeat(Math.max(w.length - 1, 0)))
+    .join(' ');
+}
+
 /** Extract the small set of cleartext filter fields + blind indexes from a form payload. */
 function projectMetadata(data: ApplicationFormData) {
   const cnic = data.personal?.cnic;
   if (!cnic) throw new Error('CNIC is required to index an application');
+  const digits = cnic.replace(/\D/g, '');
   return {
     encryptedData: encryptField(JSON.stringify(data)),
     cnicIndex: blindIndex(cnic)!,
     ibanIndex: blindIndex(data.banking?.iban ?? null),
+    emailIndex: blindIndex(data.contact?.email ?? null),
+    phoneIndex: blindIndex(data.contact?.phone ?? null),
     city: data.contact?.city ?? null,
     employmentStatus: data.employment?.status ?? null,
     incomeBand: deriveIncomeBand(data.income?.monthly),
+    maskedName: maskName(data.personal?.fullName),
+    cnicLast4: digits.length >= 4 ? digits.slice(-4) : null,
   };
 }
 
