@@ -1,6 +1,8 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { applySecurity } from './middleware/security';
+import authRoutes from './routes/authRoutes';
 import { env } from './config/env';
 
 export function createApp(): Express {
@@ -8,15 +10,16 @@ export function createApp(): Express {
 
   applySecurity(app);
   app.use(express.json({ limit: '1mb' })); // form JSON only; file uploads go direct to S3
+  app.use(cookieParser());
   app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ ok: true, ts: new Date().toISOString() });
   });
 
-  // TODO Phase 3+: mount routers here
-  // app.use('/api/application', applicationRouter);
-  // app.use('/api/admin', adminRouter);
+  app.use('/api/admin', authRoutes);
+  // TODO: mount applicant router (save/resume/submit/upload) next
+  // app.use('/api/application', applicationRoutes);
 
   // Central error handler — never leak stack traces to clients.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
