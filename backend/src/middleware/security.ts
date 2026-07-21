@@ -37,19 +37,23 @@ export function applySecurity(app: Express): void {
     cors({
       origin: (origin, callback) => {
         if (!origin) return callback(null, true);
+        const allowed = (process.env.CORS_ORIGIN || '*').split(',').map((s) => s.trim());
         if (
-          env.corsOrigin === '*' ||
-          allowedOrigins.includes(origin) ||
-          origin.endsWith('.vercel.app')
+          allowed.includes('*') ||
+          allowed.includes(origin) ||
+          origin.endsWith('.vercel.app') ||
+          origin.includes('localhost')
         ) {
           return callback(null, true);
         }
-        return callback(new Error('Not allowed by CORS'));
+        return callback(null, false);
       },
       credentials: true,
-      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-cron-secret', 'x-scan-secret'],
     })
   );
+  app.options('*', cors());
   app.use(mongoSanitize()); // strip $ and . from keys -> blocks Mongo operator injection
   app.use(hpp()); // HTTP parameter pollution guard
   app.use(globalLimiter);
