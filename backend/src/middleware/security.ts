@@ -31,9 +31,21 @@ export function applySecurity(app: Express): void {
   app.set('trust proxy', 1); // required for correct client IPs behind a proxy/load balancer
 
   app.use(helmet());
+  const allowedOrigins = env.corsOrigin.split(',').map((s) => s.trim());
+
   app.use(
     cors({
-      origin: env.corsOrigin,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          env.corsOrigin === '*' ||
+          allowedOrigins.includes(origin) ||
+          origin.endsWith('.vercel.app')
+        ) {
+          return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     })
