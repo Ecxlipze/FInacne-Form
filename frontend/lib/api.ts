@@ -1,6 +1,15 @@
 import type { DraftInput, ApplicationInput } from '@finportal/shared';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+function getApiBaseUrl(): string {
+  let url = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api').trim();
+  url = url.replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+  return url;
+}
+
+const BASE = getApiBaseUrl();
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
