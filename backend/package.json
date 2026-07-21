@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "seed:admin": "tsx src/scripts/seedAdmin.ts",
     "purge": "tsx src/jobs/purgeExpired.ts",
+    "test": "tsx --test src/tests/*.test.ts",
     "lint": "eslint . --ext .ts",
     "keygen": "node -e \"console.log('FIELD_ENCRYPTION_KEY=' + require('crypto').randomBytes(32).toString('base64')); console.log('BLIND_INDEX_KEY=' + require('crypto').randomBytes(32).toString('base64'))\""
   },

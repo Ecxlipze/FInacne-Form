@@ -11,6 +11,14 @@ export function normalizeCnic(raw: string): string {
 }
 export const CNIC_REGEX = /^\d{5}-\d{7}-\d$/;
 
+/** Auto-formats CNIC string in real-time as the user types (e.g. 42101-1234567-8) */
+export function formatCnicInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 13);
+  if (digits.length <= 5) return digits;
+  if (digits.length <= 12) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
+}
+
 /**
  * Pakistan mobile number. Accepts 03XXXXXXXXX, 3XXXXXXXXX, +923XXXXXXXXX, 00923XXXXXXXXX.
  * Canonicalizes to +923XXXXXXXXX. Mobile numbers are 3 + 9 digits after the country code.
@@ -22,6 +30,24 @@ export function normalizePhone(raw: string): string {
   if (d.startsWith('0')) d = d.slice(1);
   if (!/^3\d{9}$/.test(d)) throw new Error('Invalid Pakistan mobile number');
   return `+92${d}`;
+}
+
+/** Auto-formats local Pakistan phone input as the user types (e.g. 0300-1234567) */
+export function formatPhoneInput(raw: string): string {
+  let cleaned = raw.replace(/[^0-9+]/g, '');
+  if (cleaned.startsWith('+92')) {
+    const digits = cleaned.slice(3).replace(/\D/g, '').slice(0, 10);
+    if (digits.length <= 3) return `+92-${digits}`;
+    return `+92-${digits.slice(0, 3)}-${digits.slice(3)}`;
+  }
+  const digits = cleaned.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 4) return digits;
+  return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+}
+
+/** Name input sanitizer: keeps only letters, spaces, hyphens, and apostrophes. */
+export function sanitizeNameInput(raw: string): string {
+  return raw.replace(/[^a-zA-Z\s'-]/g, '');
 }
 
 /**
@@ -55,3 +81,17 @@ export function ageFromDob(dob: Date, now: Date = new Date()): number {
   if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
   return age;
 }
+
+/** Friendly error message extractor for end-user UI display. */
+export function getFriendlyErrorMessage(err: unknown): string {
+  if (!err) return 'An unexpected error occurred. Please try again.';
+  if (typeof err === 'string') return err;
+  if (err instanceof Error) {
+    if (err.message.includes('CNIC')) return 'Please enter a valid 13-digit CNIC number.';
+    if (err.message.includes('mobile')) return 'Please enter a valid Pakistan mobile phone number.';
+    if (err.message.includes('IBAN')) return 'Please enter a valid 24-character IBAN.';
+    return err.message;
+  }
+  return 'Please check your inputs and try again.';
+}
+
