@@ -6,13 +6,15 @@ interface FieldWrap {
   htmlFor: string;
   error?: string;
   hint?: string;
+  required?: boolean;
   children: React.ReactNode;
 }
-function Wrap({ label, htmlFor, error, hint, children }: FieldWrap) {
+function Wrap({ label, htmlFor, error, hint, required, children }: FieldWrap) {
   return (
     <div>
       <label htmlFor={htmlFor} className="field-label">
         {label}
+        {required && <span className="text-danger"> *</span>}
       </label>
       {children}
       {hint && !error && <p className="mt-1.5 text-sm text-muted">{hint}</p>}
@@ -29,36 +31,49 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
   hint?: string;
+  required?: boolean;
 };
 export const TextField = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, id, ...rest }, ref) => {
+  ({ label, error, hint, required, id, ...rest }, ref) => {
     const fieldId = id ?? rest.name ?? label;
     return (
-      <Wrap label={label} htmlFor={fieldId} error={error} hint={hint}>
-        <input
-          id={fieldId}
-          ref={ref}
-          aria-invalid={!!error}
-          className="field-input"
-          {...rest}
-        />
+      <Wrap label={label} htmlFor={fieldId} error={error} hint={hint} required={required}>
+        <input id={fieldId} ref={ref} aria-invalid={!!error} className="field-input" {...rest} />
       </Wrap>
     );
   }
 );
 TextField.displayName = 'TextField';
 
+type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label: string;
+  error?: string;
+  required?: boolean;
+};
+export const TextareaField = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ label, error, required, id, ...rest }, ref) => {
+    const fieldId = id ?? rest.name ?? label;
+    return (
+      <Wrap label={label} htmlFor={fieldId} error={error} required={required}>
+        <textarea id={fieldId} ref={ref} aria-invalid={!!error} className="field-input" rows={4} {...rest} />
+      </Wrap>
+    );
+  }
+);
+TextareaField.displayName = 'TextareaField';
+
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label: string;
   error?: string;
   options: { value: string; label: string }[];
   placeholder?: string;
+  required?: boolean;
 };
 export const SelectField = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, id, ...rest }, ref) => {
+  ({ label, error, options, placeholder, required, id, ...rest }, ref) => {
     const fieldId = id ?? rest.name ?? label;
     return (
-      <Wrap label={label} htmlFor={fieldId} error={error}>
+      <Wrap label={label} htmlFor={fieldId} error={error} required={required}>
         <select id={fieldId} ref={ref} aria-invalid={!!error} className="field-input" {...rest}>
           {placeholder && <option value="">{placeholder}</option>}
           {options.map((o) => (

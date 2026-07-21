@@ -17,13 +17,14 @@ export default function Home() {
       <main className="mx-auto max-w-5xl px-4">
         <section className="grid gap-10 py-16 md:grid-cols-2 md:items-center">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-verify">Secure application</p>
+            <p className="text-sm font-medium uppercase tracking-wide text-verify">Financial assistance application</p>
             <h1 className="mt-3 font-serif text-4xl leading-tight text-ink md:text-5xl">
-              Complete your financial information — carefully, and in confidence.
+              Apply for financial assistance in one secure session.
             </h1>
             <p className="mt-4 text-lg text-muted">
-              Thirteen short sections. Your answers are encrypted, saved as you go, and only ever seen
-              by authorized reviewers. You can stop and resume from where you left off.
+              This form collects the personal, financial, and household information needed to assess
+              your application. It takes about 15–20 minutes, and everything you enter is encrypted and
+              saved automatically after each section — so you can pause and pick up right where you left off.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/apply" className="btn-primary">
@@ -33,6 +34,10 @@ export default function Home() {
                 What you’ll need
               </a>
             </div>
+            <p className="mt-4 text-sm text-muted">
+              Your details are used only to review this application and are handled in line with our
+              privacy notice.
+            </p>
           </div>
 
           {/* Signature: the application shown as an official numbered index. */}

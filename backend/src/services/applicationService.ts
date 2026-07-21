@@ -5,7 +5,7 @@
  */
 import { Application, ApplicationDoc, IncomeBand } from '../models/Application';
 import { encryptField, decryptField, blindIndex } from '../utils/crypto';
-import { DraftInput, draftSchema, applicationSchema, ApplicationInput } from '@finportal/shared';
+import { DraftInput, draftSchema, applicationSchema, ApplicationInput, totalMonthlyIncome } from '@finportal/shared';
 import { issueResumeToken, verifyResumeToken } from './resumeToken';
 import { nextAppId } from './appIdService';
 import { env } from '../config/env';
@@ -45,7 +45,7 @@ function projectMetadata(data: ApplicationFormData) {
     phoneIndex: blindIndex(data.contact?.phone ?? null),
     city: data.contact?.city ?? null,
     employmentStatus: data.employment?.status ?? null,
-    incomeBand: deriveIncomeBand(data.income?.monthly),
+    incomeBand: deriveIncomeBand(totalMonthlyIncome(data.income)),
     maskedName: maskName(data.personal?.fullName),
     cnicLast4: digits.length >= 4 ? digits.slice(-4) : null,
   };

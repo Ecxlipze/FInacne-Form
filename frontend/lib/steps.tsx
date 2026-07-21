@@ -4,7 +4,12 @@ import { STEP_ORDER } from '@finportal/shared';
 import type { StepProps } from '@/components/steps/types';
 import PersonalStep from '@/components/steps/PersonalStep';
 import ContactStep from '@/components/steps/ContactStep';
+import EducationStep from '@/components/steps/EducationStep';
 import EmploymentStep from '@/components/steps/EmploymentStep';
+import { IncomeStep, ExpensesStep, AssetsStep, LiabilitiesStep } from '@/components/steps/financialSteps';
+import BankingStep from '@/components/steps/BankingStep';
+import FamilyStep from '@/components/steps/FamilyStep';
+import GoalsStep from '@/components/steps/GoalsStep';
 import DocumentsStep from '@/components/steps/DocumentsStep';
 import DeclarationStep from '@/components/steps/DeclarationStep';
 import PlaceholderStep from '@/components/steps/PlaceholderStep';
@@ -34,7 +39,15 @@ const TITLES: Record<StepKey, string> = {
 const BUILT: Partial<Record<StepKey, React.ComponentType<StepProps>>> = {
   personal: PersonalStep,
   contact: ContactStep,
+  education: EducationStep,
   employment: EmploymentStep,
+  income: IncomeStep,
+  expenses: ExpensesStep,
+  assets: AssetsStep,
+  liabilities: LiabilitiesStep,
+  banking: BankingStep,
+  family: FamilyStep,
+  goals: GoalsStep,
   documents: DocumentsStep,
   declaration: DeclarationStep,
 };
