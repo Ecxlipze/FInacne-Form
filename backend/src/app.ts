@@ -12,7 +12,7 @@ export function createApp(): Express {
   const app = express();
 
   applySecurity(app);
-  app.use(express.json({ limit: '1mb' })); // form JSON only; file uploads go direct to S3
+  app.use(express.json({ limit: '1mb' })); // form JSON only; file uploads go direct to storage
   app.use(cookieParser());
   app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 

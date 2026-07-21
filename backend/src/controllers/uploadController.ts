@@ -13,7 +13,7 @@ const presignSchema = z.object({
   contentType: z.enum(ALLOWED_UPLOAD_TYPES),
 });
 
-/** Applicant requests a presigned POST; the browser then uploads directly to S3. */
+/** Applicant requests a signed upload URL; the browser then uploads directly to storage. */
 export async function presign(req: Request, res: Response): Promise<void> {
   const parsed = presignSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -33,7 +33,7 @@ export async function presign(req: Request, res: Response): Promise<void> {
     }
     res.json(result);
   } catch (err) {
-    // S3 not configured / presign failure
+    // storage not configured / presign failure
     res.status(503).json({ error: (err as Error).message });
   }
 }
@@ -45,7 +45,7 @@ const scanSchema = z.object({
 });
 
 /**
- * Called by the virus scanner (e.g. an S3-triggered Lambda) after an object is created.
+ * Called by the virus scanner (triggered by a storage object-created webhook) after upload.
  * Authenticated with a shared secret header, compared in constant time.
  */
 export async function scanCallback(req: Request, res: Response): Promise<void> {

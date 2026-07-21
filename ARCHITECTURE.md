@@ -12,7 +12,7 @@ flowing. **Decisions that were open have been made** (noted inline) so the build
 | --- | --- | --- |
 | Searchable-but-encrypted fields | **Blind index (HMAC) + AES-256-GCM**, two separate keys | Encrypted values can't be searched; the blind index enables duplicate-CNIC detection without storing plaintext |
 | Applicant sessions | **Magic-link resume tokens**, no applicant accounts | Better public UX; avoids storing a second credential set |
-| File storage | **S3, private bucket, pre-signed URLs, SSE** | Resolves the S3-vs-local inconsistency; nothing sensitive touches the app disk or repo |
+| File storage | **Supabase Storage, private bucket, signed upload/download URLs** | Nothing sensitive touches the app disk or repo; browser uploads with a short-lived token |
 | Database hosting | **MongoDB Atlas** (managed) | Encryption at rest, backups, network isolation without solo ops burden |
 | Draft model | **One collection**; a draft is `status: 'draft'` | Removes the `drafts`/`applications` sync problem |
 | Virus scanning | **Launch-critical, not "future"** | Public upload endpoint = must scan before accepting |
@@ -33,8 +33,8 @@ Two independent keys (`FIELD_ENCRYPTION_KEY`, `BLIND_INDEX_KEY`) — never reuse
 > Implemented in `backend/src/utils/crypto.ts` and `backend/src/services/applicationService.ts`.
 
 ### 2. Managed services over self-hosted infra
-MongoDB **Atlas** (not a self-hosted Mongo on a VPS) and **S3** with server-side encryption, a
-private bucket, and short-lived pre-signed URLs for both upload and download. The app server
+MongoDB **Atlas** (not a self-hosted Mongo on a VPS) and **Supabase Storage** with a private
+bucket and short-lived signed URLs for both upload and download (encrypted at rest). The app server
 never stores files; the `uploads/` folder from the original plan is removed.
 
 ### 3. Applicant session model — magic link
@@ -84,7 +84,7 @@ applications          # single source of truth (drafts + submitted)
 
 admins                # admin users (bcrypt), roles: super_admin | reviewer | viewer
 sessions              # refresh tokens
-uploads               # file metadata + S3 key + scan status (clean | pending | quarantined)
+uploads               # file metadata + storage path + scan status (clean | pending | quarantined)
 audit_logs            # every action: who, what, when, IP
 settings              # form config, privacy-notice version
 ```
@@ -109,8 +109,8 @@ flowchart TD
   end
 
   CR -->|encrypted blob + blind index| DB[(MongoDB Atlas<br/>encrypted at rest)]
-  A -->|pre-signed PUT| S3[(S3 private bucket<br/>SSE)]
-  S3 -->|object-created event| SCAN[Virus scan] --> SVC
+  A -->|signed upload URL + token| STORE[(Supabase Storage<br/>private bucket)]
+  STORE -->|object-created webhook| SCAN[Virus scan] --> SVC
 
   ADM[Admin browser] -->|HTTPS + JWT| API
   KEYS[[KMS / secrets manager]] -.keys.-> CR
@@ -129,7 +129,7 @@ GET   /api/form/config
 POST  /api/application/save            # autosave draft (upsert by cnicIndex)
 POST  /api/application/resume          # exchange magic-link token for a draft
 POST  /api/application/submit
-POST  /api/upload/presign              # returns short-lived S3 PUT url
+POST  /api/upload/presign              # returns a signed upload URL + token
 POST  /api/captcha/verify
 ```
 
@@ -151,9 +151,9 @@ GET    /api/admin/export                # v2
 
 | Week | Deliverables |
 | --- | --- |
-| 1 | Setup, **crypto + env + models (done)**, admin auth, Atlas + S3 config, landing page |
+| 1 | Setup, **crypto + env + models (done)**, admin auth, Atlas + Supabase config, landing page |
 | 2 | Multi-step form framework, reusable components, Zod schemas (shared FE/BE), validation |
-| 3 | Conditional logic, autosave + magic-link resume, S3 pre-signed upload + scan, CAPTCHA |
+| 3 | Conditional logic, autosave + magic-link resume, Supabase signed upload + scan, CAPTCHA |
 | 4 | Submission workflow, admin dashboard, search/filter, application detail w/ decryption |
 | 5 | Status management, audit logging, consent + retention job, testing, deploy |
 

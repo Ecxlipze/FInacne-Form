@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_BYTES } from '@finportal/shared';
-import { api, uploadToS3, ApiError } from '@/lib/api';
+import { api, uploadToStorage, ApiError } from '@/lib/api';
 
 type Status = 'idle' | 'uploading' | 'uploaded' | 'error';
 
@@ -38,8 +38,8 @@ export function FileUpload({
     setStatus('uploading');
     setMessage('');
     try {
-      const { post } = await api.presignUpload(applicationId, docType, file.name, file.type);
-      const ok = await uploadToS3(post, file);
+      const { path, token } = await api.presignUpload(applicationId, docType, file.name, file.type);
+      const ok = await uploadToStorage(path, token, file);
       if (!ok) throw new Error('Upload rejected');
       setStatus('uploaded');
       setMessage('Uploaded — we’ll scan it before review.');

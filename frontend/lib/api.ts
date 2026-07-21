@@ -26,8 +26,8 @@ export interface FormConfig {
 
 export interface PresignResponse {
   uploadId: string;
-  key: string;
-  post: { url: string; fields: Record<string, string> };
+  path: string; // storage object path
+  token: string; // signed-upload token
 }
 
 export const api = {
@@ -64,14 +64,11 @@ export const api = {
     }),
 };
 
-/** Upload a file straight to S3 using the presigned POST policy. Returns true on success. */
-export async function uploadToS3(
-  post: { url: string; fields: Record<string, string> },
-  file: File
-): Promise<boolean> {
-  const form = new FormData();
-  Object.entries(post.fields).forEach(([k, v]) => form.append(k, v));
-  form.append('file', file); // must be last for S3 POST policy
-  const res = await fetch(post.url, { method: 'POST', body: form });
-  return res.ok; // S3 returns 204 on success
+/** Upload a file directly to Supabase Storage using the signed upload URL + token. */
+export async function uploadToStorage(path: string, token: string, file: File): Promise<boolean> {
+  const { getSupabase, STORAGE_BUCKET } = await import('./supabase');
+  const { error } = await getSupabase()
+    .storage.from(STORAGE_BUCKET)
+    .uploadToSignedUrl(path, token, file, { contentType: file.type });
+  return !error;
 }

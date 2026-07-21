@@ -154,7 +154,7 @@ export async function addNote(id: string, text: string, actor: ActorCtx): Promis
 
 /** Subject erasure — permanent delete of the record and all associated documents. */
 export async function deleteApplication(id: string): Promise<boolean> {
-  await deleteForApplication(id); // remove S3 objects + upload metadata first
+  await deleteForApplication(id); // remove storage objects + upload metadata first
   const res = await Application.findByIdAndDelete(id);
   return !!res;
 }

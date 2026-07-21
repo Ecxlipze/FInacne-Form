@@ -39,31 +39,26 @@ Indexes (unique CNIC index, session TTL, etc.) are created automatically on firs
 
 ---
 
-## 3. S3 (private bucket)
+## 3. Supabase Storage (private bucket)
 
-1. Create a bucket with **Block all public access = ON**.
-2. Set `AWS_REGION` and `S3_BUCKET` in `backend/.env`.
-3. Provide credentials via the standard AWS chain — either an IAM role, or in dev:
+1. Create a Supabase project. From Project Settings → API, copy the **Project URL**, the
+   **anon** key, and the **service_role** key.
+2. Storage → create a bucket named `applications` with:
+   - **Public = OFF** (private).
+   - **File size limit = 10 MB**.
+   - **Allowed MIME types**: `image/png, image/jpeg, application/pdf`.
+   (These bucket settings are what enforce type/size — the equivalent of the old S3 POST policy.)
+3. `backend/.env`:
    ```
-   AWS_ACCESS_KEY_ID=...
-   AWS_SECRET_ACCESS_KEY=...
+   SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=<service_role key — server only, never exposed>
+   SUPABASE_STORAGE_BUCKET=applications
    ```
-   The IAM identity needs `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on
-   `arn:aws:s3:::YOUR_BUCKET/*`.
-4. **Bucket CORS** (Permissions → CORS) — REQUIRED, or browser uploads fail:
-   ```json
-   [
-     {
-       "AllowedHeaders": ["*"],
-       "AllowedMethods": ["POST", "GET"],
-       "AllowedOrigins": ["http://localhost:3000"],
-       "ExposeHeaders": []
-     }
-   ]
-   ```
+4. `frontend/.env.local` (see section 6) uses the **anon** key — safe to expose; the browser
+   uploads with a short-lived signed token, not with any account credential.
 
-Uploads are forced to server-side encryption (AES256) by the presigned policy — the
-default bucket settings allow this.
+Objects are encrypted at rest by the platform. No CORS config is normally needed — Supabase's
+storage endpoint accepts the signed upload from the browser.
 
 ---
 
@@ -91,6 +86,9 @@ APP_BASE_URL=http://localhost:3000
 `frontend/.env.local`:
 ```
 NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+NEXT_PUBLIC_SUPABASE_BUCKET=applications
 # NEXT_PUBLIC_TURNSTILE_SITE_KEY=...   # only if using real Turnstile
 ```
 
@@ -118,10 +116,11 @@ npm run dev -w frontend    # http://localhost:3000
 
 ### Viewing uploaded documents locally (no scanner)
 
-Uploads land in S3 with `scanStatus: 'pending'` and stay non-viewable until the scanner
+Uploads land in storage with `scanStatus: 'pending'` and stay non-viewable until the scanner
 marks them clean. There's no scanner locally, so mark one clean by hand:
 
-1. Find the object key in Atlas → `uploads` collection (`s3Key` field).
+1. Find the object path in Atlas → `uploads` collection (`s3Key` field — it holds the Supabase
+   storage path).
 2. Call the scan callback:
    ```bash
    curl -X POST http://localhost:4000/api/upload/scan-callback \
@@ -135,8 +134,10 @@ marks them clean. There's no scanner locally, so mark one clean by hand:
 
 ## Known gotchas (check these first if something breaks)
 
-- **Uploads fail in the browser** → S3 bucket CORS (step 3.4) is missing or the origin
-  doesn't match exactly.
+- **Uploads fail in the browser** → check the bucket exists and is named exactly
+  `SUPABASE_STORAGE_BUCKET`, that the file's type/size is within the bucket's allowed MIME
+  types and size limit, and that `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  are set.
 - **Admin login works but session drops on refresh** → the refresh cookie. It's
   `sameSite=strict`, `secure` only in production. Locally, `:3000` and `:4000` share the
   `localhost` site so it should work; if it doesn't, that's the place to look.

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Upload, DocType, ScanStatus } from '../models/Upload';
 import { Application } from '../models/Application';
-import * as s3 from './s3Service';
+import * as storage from './storageService';
 
 /** Randomized key so the stored object name reveals nothing and can't collide. */
 function makeKey(applicationId: string, docType: DocType, contentType: string): string {
@@ -11,11 +11,11 @@ function makeKey(applicationId: string, docType: DocType, contentType: string): 
 
 export interface PresignResult {
   uploadId: string;
-  key: string;
-  post: Awaited<ReturnType<typeof s3.presignUpload>>;
+  path: string; // storage object path the browser uploads to
+  token: string; // signed-upload token authorizing that write
 }
 
-/** Reserve an upload slot (pending) and return a presigned POST for the browser. */
+/** Reserve an upload slot (pending) and return a signed upload URL + token for the browser. */
 export async function createUpload(
   applicationId: string,
   docType: DocType,
@@ -34,11 +34,11 @@ export async function createUpload(
     contentType,
     scanStatus: 'pending',
   });
-  const post = await s3.presignUpload(key, contentType);
-  return { uploadId: String(doc._id), key, post };
+  const { path, token } = await storage.presignUpload(key);
+  return { uploadId: String(doc._id), path, token };
 }
 
-/** Called by the scanner after S3 object-created. Flips pending -> clean | quarantined. */
+/** Called by the scanner after object-created. Flips pending -> clean | quarantined. */
 export async function recordScanResult(
   key: string,
   status: Extract<ScanStatus, 'clean' | 'quarantined'>,
@@ -50,7 +50,7 @@ export async function recordScanResult(
   );
   // Quarantined objects are removed from the bucket so they can never be served.
   if (status === 'quarantined') {
-    await s3.deleteObjects([key]).catch(() => undefined);
+    await storage.deleteObjects([key]).catch(() => undefined);
   }
   return res.matchedCount > 0;
 }
@@ -66,13 +66,13 @@ export async function listForApplication(applicationId: string) {
 export async function getDownloadUrl(uploadId: string): Promise<string | null> {
   const doc = await Upload.findById(uploadId).select('s3Key scanStatus');
   if (!doc || doc.scanStatus !== 'clean') return null;
-  return s3.presignDownload(doc.s3Key);
+  return storage.presignDownload(doc.s3Key);
 }
 
 /** Delete all objects + metadata for an application (subject erasure). */
 export async function deleteForApplication(applicationId: string): Promise<void> {
   const uploads = await Upload.find({ application: applicationId }).select('s3Key');
   const keys = uploads.map((u) => u.s3Key);
-  if (keys.length) await s3.deleteObjects(keys).catch(() => undefined);
+  if (keys.length) await storage.deleteObjects(keys).catch(() => undefined);
   await Upload.deleteMany({ application: applicationId });
 }
