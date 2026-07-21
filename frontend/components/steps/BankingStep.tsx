@@ -10,10 +10,11 @@ import type { StepProps } from './types';
 type In = z.input<typeof bankingSchema>;
 
 export default function BankingStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(bankingSchema), defaultValues: slice as In,
+  const { register, watch, handleSubmit, formState: { errors } } = useForm({
+    mode: 'onTouched', resolver: zodResolver(bankingSchema), defaultValues: slice as In,
   });
   const e = errors as Record<string, { message?: string } | undefined>;
+  const canContinue = bankingSchema.safeParse(watch()).success;
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
       <StepShell title="Banking" description="Where funds would be received.">
@@ -25,7 +26,7 @@ export default function BankingStep({ slice, onSaveAndContinue, onBack, isFirst,
           <TextField label="Branch code (optional)" {...register('branchCode')} error={e.branchCode?.message} />
         </div>
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }

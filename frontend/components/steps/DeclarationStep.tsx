@@ -19,12 +19,16 @@ export default function DeclarationStep({
 }: StepProps) {
   const {
     register,
+    watch,
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(declarationSchema),
     defaultValues: { privacyNoticeVersion: '2026-01', ...(slice as Partial<In>) } as In,
   });
+
+  const canContinue = declarationSchema.safeParse(watch()).success;
 
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
@@ -44,7 +48,7 @@ export default function DeclarationStep({
           </p>
         )}
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }

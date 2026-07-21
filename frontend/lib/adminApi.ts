@@ -42,6 +42,27 @@ async function authed<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 }
 
+/** Authenticated binary request (e.g. PDF), with one refresh retry on 401. */
+async function authedBlob(path: string): Promise<Blob> {
+  const once = async (): Promise<Blob> => {
+    const res = await fetch(`${BASE}${path}`, {
+      credentials: 'include',
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+    if (!res.ok) throw new AdminApiError(res.status, 'Download failed');
+    return res.blob();
+  };
+  try {
+    return await once();
+  } catch (err) {
+    if (err instanceof AdminApiError && err.status === 401) {
+      await adminApi.refresh();
+      return once();
+    }
+    throw err;
+  }
+}
+
 export interface AdminUser {
   id: string;
   email: string;
@@ -122,6 +143,7 @@ export const adminApi = {
   dashboard: () => authed<DashboardStats>('/admin/dashboard'),
   listApplications: (qs: string) => authed<ListResult>(`/admin/applications${qs ? `?${qs}` : ''}`),
   getApplication: (id: string) => authed<AppDetail>(`/admin/applications/${id}`),
+  downloadPdf: (id: string) => authedBlob(`/admin/applications/${id}/pdf`),
   listDocuments: (id: string) => authed<{ documents: DocMeta[] }>(`/admin/applications/${id}/documents`),
   downloadDocument: (uploadId: string) => authed<{ url: string }>(`/admin/uploads/${uploadId}/download`),
   changeStatus: (id: string, status: string, note?: string) =>

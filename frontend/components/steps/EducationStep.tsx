@@ -11,11 +11,13 @@ type In = z.input<typeof educationSchema>;
 
 export default function EducationStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
   const { register, watch, handleSubmit, formState: { errors } } = useForm({
+    mode: 'onTouched',
     resolver: zodResolver(educationSchema),
     defaultValues: slice as In,
   });
   const e = errors as Record<string, { message?: string } | undefined>;
   const isStudent = watch('isCurrentStudent');
+  const canContinue = educationSchema.safeParse(watch()).success;
 
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
@@ -36,7 +38,7 @@ export default function EducationStep({ slice, onSaveAndContinue, onBack, isFirs
           <TextField label="Current semester" type="number" required {...register('currentSemester')} error={e.currentSemester?.message} />
         )}
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }

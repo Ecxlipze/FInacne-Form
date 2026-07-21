@@ -12,10 +12,11 @@ type In = z.input<typeof familySchema>;
 
 export default function FamilyStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
   const { register, control, watch, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(familySchema), defaultValues: slice as In,
+    mode: 'onTouched', resolver: zodResolver(familySchema), defaultValues: slice as In,
   });
   const e = errors as Record<string, { message?: string } | undefined>;
   const married = watch('maritalStatus') === 'married';
+  const canContinue = familySchema.safeParse(watch()).success;
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
       <StepShell title="Family" description="Your household details.">
@@ -39,7 +40,7 @@ export default function FamilyStep({ slice, onSaveAndContinue, onBack, isFirst, 
           <MoneyField control={control} name="householdMonthlyIncome" label="Household monthly income" />
         </div>
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }

@@ -27,11 +27,13 @@ const STATUS_OPTIONS = [
 
 export default function EmploymentStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
   const { register, control, watch, handleSubmit, formState: { errors } } = useForm<EmploymentForm>({
+    mode: 'onTouched',
     resolver: zodResolver(employmentSchema) as unknown as Resolver<EmploymentForm>,
     defaultValues: slice as EmploymentForm,
   });
   const status = watch('status');
   const e = errors as Record<string, { message?: string } | undefined>;
+  const canContinue = employmentSchema.safeParse(watch()).success;
 
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
@@ -71,7 +73,7 @@ export default function EmploymentStep({ slice, onSaveAndContinue, onBack, isFir
         {status === 'retired' && <MoneyField control={control} name="pensionMonthly" label="Monthly pension (optional)" />}
         {status === 'unemployed' && <p className="text-sm text-muted">No further employment details are needed.</p>}
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }

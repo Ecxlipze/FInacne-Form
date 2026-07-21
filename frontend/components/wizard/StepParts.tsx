@@ -26,18 +26,20 @@ export function StepFooter({
   isFirst,
   saving,
   isLast,
+  canContinue = true,
 }: {
   onBack: () => void;
   isFirst: boolean;
   saving: boolean;
   isLast: boolean;
+  canContinue?: boolean;
 }) {
   return (
     <div className="mt-8 flex items-center justify-between border-t border-line pt-5">
       <button type="button" className="btn-ghost" onClick={onBack} disabled={isFirst || saving}>
         Back
       </button>
-      <button type="submit" className="btn-primary" disabled={saving}>
+      <button type="submit" className="btn-primary" disabled={saving || !canContinue}>
         {saving ? 'Saving…' : isLast ? 'Review application' : 'Save and continue'}
       </button>
     </div>

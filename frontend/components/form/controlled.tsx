@@ -64,7 +64,45 @@ export function PhoneField({ control, name, label = 'Mobile number', required }:
   );
 }
 
-/** Currency input showing grouped digits with an "Rs" prefix; stores a number. */
+/** Name input that blocks anything except letters, spaces, hyphens, and apostrophes as you type. */
+export function NameField({ control, name, label = 'Full name', required }: { control: any; name: string; label?: string; required?: boolean }) {
+  const { field, fieldState } = useController({ control, name });
+  return (
+    <div>
+      <Label label={label} htmlFor={name} required={required} />
+      <input
+        id={name}
+        className="field-input"
+        aria-invalid={!!fieldState.error}
+        value={(field.value as string) ?? ''}
+        onChange={(e) => field.onChange(e.target.value.replace(/[^A-Za-z'\- ]/g, ''))}
+        onBlur={field.onBlur}
+      />
+      {fieldState.error && <p className="field-error" role="alert">{fieldState.error.message}</p>}
+    </div>
+  );
+}
+
+/** Postal code input: digits only, capped at 5. */
+export function PostalCodeField({ control, name, label = 'Postal code (optional)', required }: { control: any; name: string; label?: string; required?: boolean }) {
+  const { field, fieldState } = useController({ control, name });
+  return (
+    <div>
+      <Label label={label} htmlFor={name} required={required} />
+      <input
+        id={name}
+        inputMode="numeric"
+        placeholder="54000"
+        className="field-input"
+        aria-invalid={!!fieldState.error}
+        value={(field.value as string) ?? ''}
+        onChange={(e) => field.onChange(e.target.value.replace(/\D/g, '').slice(0, 5))}
+        onBlur={field.onBlur}
+      />
+      {fieldState.error && <p className="field-error" role="alert">{fieldState.error.message}</p>}
+    </div>
+  );
+}
 export function MoneyField({ control, name, label, required }: { control: any; name: string; label: string; required?: boolean }) {
   const { field, fieldState } = useController({ control, name });
   const num = typeof field.value === 'number' && isFinite(field.value) ? field.value : undefined;

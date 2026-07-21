@@ -16,15 +16,17 @@ function makeFinancialStep(
 ) {
   return function FinancialStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
     const { control, watch, handleSubmit } = useForm({
+      mode: 'onTouched',
       resolver: zodResolver(schema as any),
       defaultValues: slice as any,
     });
+    const canContinue = (schema as any).safeParse(watch()).success;
     return (
       <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
         <StepShell title={meta.title} description={meta.description}>
           <MoneyGrid control={control} watch={watch} fields={fields} totalLabel={meta.totalLabel} />
         </StepShell>
-        <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+        <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
       </form>
     );
   };

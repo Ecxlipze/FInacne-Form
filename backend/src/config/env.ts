@@ -69,6 +69,9 @@ export const env = {
   smtpUser: process.env.SMTP_USER ?? '',
   smtpPass: process.env.SMTP_PASS ?? '',
   emailFrom: process.env.EMAIL_FROM ?? 'no-reply@finportal.example',
+
+  // Optional path to a logo image embedded in exported PDFs (falls back to a text header).
+  companyLogoPath: process.env.COMPANY_LOGO_PATH ?? '',
 } as const;
 
 // Validate everything eagerly so misconfig surfaces on startup.

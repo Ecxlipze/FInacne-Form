@@ -11,10 +11,11 @@ import type { StepProps } from './types';
 type In = z.input<typeof goalsSchema>;
 
 export default function GoalsStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
-  const { register, control, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(goalsSchema), defaultValues: slice as In,
+  const { register, control, watch, handleSubmit, formState: { errors } } = useForm({
+    mode: 'onTouched', resolver: zodResolver(goalsSchema), defaultValues: slice as In,
   });
   const e = errors as Record<string, { message?: string } | undefined>;
+  const canContinue = goalsSchema.safeParse(watch()).success;
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
       <StepShell title="Financial goals" description="Tell us what this application is for.">
@@ -30,7 +31,7 @@ export default function GoalsStep({ slice, onSaveAndContinue, onBack, isFirst, i
         </div>
         <TextareaField label="Additional notes (optional)" {...register('additionalNotes')} error={e.additionalNotes?.message} />
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }

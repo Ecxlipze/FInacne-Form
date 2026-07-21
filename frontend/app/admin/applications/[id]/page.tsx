@@ -26,6 +26,7 @@ export default function ApplicationDetailPage() {
   const [status, setStatus] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   const canReview = admin?.role === 'reviewer' || admin?.role === 'super_admin';
@@ -63,6 +64,21 @@ export default function ApplicationDetailPage() {
     window.open(url, '_blank', 'noopener');
   }
 
+  async function downloadPdf() {
+    setPdfBusy(true);
+    try {
+      const blob = await adminApi.downloadPdf(id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${app?.appId ?? 'application'}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   async function erase() {
     if (!confirm('Permanently delete this application and all its documents? This cannot be undone.')) return;
     await adminApi.deleteApplication(id);
@@ -89,6 +105,9 @@ export default function ApplicationDetailPage() {
                 <h1 className="font-serif text-2xl text-ink">{app.appId ?? '(draft)'}</h1>
                 <p className="text-sm capitalize text-muted">{app.status.replace(/_/g, ' ')}</p>
               </div>
+              <button className="btn-ghost" onClick={downloadPdf} disabled={pdfBusy}>
+                {pdfBusy ? 'Preparing…' : 'Download PDF'}
+              </button>
             </div>
 
             {Object.entries(app.data).map(([section, fields]) => (

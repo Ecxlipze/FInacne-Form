@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import * as adminService from '../services/adminApplicationService';
+import { buildApplicationPdf } from '../services/pdfService';
 import { audit } from '../utils/audit';
 import { ApplicationStatus } from '../models/Application';
 
@@ -109,6 +110,26 @@ export async function addNote(req: Request, res: Response): Promise<void> {
     return;
   }
   res.json({ ok: true });
+}
+
+export async function exportPdf(req: Request, res: Response): Promise<void> {
+  const result = await adminService.getApplicationDetail(req.params.id);
+  if (!result) {
+    res.status(404).json({ error: 'Application not found' });
+    return;
+  }
+  await audit({ action: 'export', req, targetType: 'Application', targetId: req.params.id, meta: { format: 'pdf' } });
+  const { meta, data } = result;
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${meta.appId ?? 'application'}.pdf"`);
+  buildApplicationPdf(res, {
+    appId: meta.appId,
+    status: meta.status,
+    submittedAt: meta.submittedAt,
+    createdAt: meta.createdAt,
+    consent: meta.consent,
+    data,
+  });
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {

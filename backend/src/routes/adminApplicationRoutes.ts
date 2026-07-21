@@ -13,6 +13,7 @@ router.get('/dashboard', ctrl.dashboard);
 router.get('/applications', ctrl.list);
 router.get('/applications/:id', ctrl.detail);
 router.get('/applications/:id/documents', uploadCtrl.listDocuments);
+router.get('/applications/:id/pdf', ctrl.exportPdf);
 router.get('/uploads/:uploadId/download', uploadCtrl.downloadDocument);
 
 // Review actions — reviewers and super admins only.

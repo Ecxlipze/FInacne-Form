@@ -4,24 +4,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { personalSchema } from '@finportal/shared';
 import { TextField, SelectField } from '@/components/form/Field';
-import { CnicField } from '@/components/form/controlled';
+import { CnicField, NameField } from '@/components/form/controlled';
 import { StepShell, StepFooter } from '@/components/wizard/StepParts';
 import type { StepProps } from './types';
 
 type In = z.input<typeof personalSchema>;
 
 export default function PersonalStep({ slice, onSaveAndContinue, onBack, isFirst, isLast, saving }: StepProps) {
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({ resolver: zodResolver(personalSchema), defaultValues: slice as In });
+  const { register, control, watch, handleSubmit, formState: { errors } } = useForm({
+    mode: 'onTouched',
+    resolver: zodResolver(personalSchema),
+    defaultValues: slice as In,
+  });
+  const canContinue = personalSchema.safeParse(watch()).success;
 
   return (
     <form onSubmit={handleSubmit((d) => onSaveAndContinue(d))} noValidate>
       <StepShell title="Personal information" description="Enter your details exactly as they appear on your CNIC.">
-        <TextField label="Full name" required {...register('fullName')} error={errors.fullName?.message} />
+        <NameField control={control} name="fullName" label="Full name" required />
         <CnicField control={control} name="cnic" required />
         <TextField label="Date of birth" type="date" required {...register('dob')} error={errors.dob?.message as string | undefined} />
         <SelectField
@@ -38,7 +38,7 @@ export default function PersonalStep({ slice, onSaveAndContinue, onBack, isFirst
           error={errors.gender?.message}
         />
       </StepShell>
-      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} />
+      <StepFooter onBack={onBack} isFirst={isFirst} isLast={isLast} saving={saving} canContinue={canContinue} />
     </form>
   );
 }
