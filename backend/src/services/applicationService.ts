@@ -8,6 +8,7 @@ import { encryptField, decryptField, blindIndex } from '../utils/crypto';
 import { DraftInput, draftSchema, applicationSchema, ApplicationInput, totalMonthlyIncome } from '@finportal/shared';
 import { issueResumeToken, verifyResumeToken } from './resumeToken';
 import { nextAppId } from './appIdService';
+import * as email from './emailService';
 import { env } from '../config/env';
 
 /** The form shape is the single source of truth in @finportal/shared. */
@@ -83,11 +84,20 @@ export async function saveDraft(input: unknown): Promise<ApplicationDoc> {
 export async function issueResumeLink(
   applicationId: string
 ): Promise<{ token: string; expiresAt: Date } | null> {
-  const doc = await Application.findById(applicationId).select('_id status');
+  const doc = await Application.findById(applicationId).select('status encryptedData');
   if (!doc || doc.status !== 'draft') return null;
   const { token, nonce, expiresAt } = issueResumeToken(applicationId);
   doc.set('activeResumeNonce', nonce);
   await doc.save();
+
+  // Email the link to the applicant's own (decrypted) email — never to a client-supplied address.
+  try {
+    const data: ApplicationFormData = doc.encryptedData ? JSON.parse(decryptField(doc.encryptedData)!) : {};
+    const to = data.contact?.email;
+    if (to) void email.sendResumeLink(to, `${env.appBaseUrl}/resume?token=${encodeURIComponent(token)}`);
+  } catch {
+    /* email is best-effort */
+  }
   return { token, expiresAt };
 }
 
@@ -152,6 +162,9 @@ export async function submitApplication(
     },
     { new: true, upsert: true }
   );
+
+  // Confirmation email to the applicant (best-effort).
+  if (data.contact?.email) void email.sendSubmissionReceived(data.contact.email, appId);
 
   return { ok: true, appId, id: String(doc._id) };
 }

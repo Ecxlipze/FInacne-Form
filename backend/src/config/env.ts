@@ -59,6 +59,16 @@ export const env = {
 
   // Run the retention purge inside the app process (dev/small deploys). Prefer external cron in prod.
   enablePurgeCron: process.env.ENABLE_PURGE_CRON === 'true',
+
+  // Public base URL of the frontend, used to build resume links in emails.
+  appBaseUrl: process.env.APP_BASE_URL ?? 'http://localhost:3000',
+
+  // Email (SMTP). If unset, emails are logged to the console instead of sent (dev).
+  smtpHost: process.env.SMTP_HOST ?? '',
+  smtpPort: Number(process.env.SMTP_PORT ?? 587),
+  smtpUser: process.env.SMTP_USER ?? '',
+  smtpPass: process.env.SMTP_PASS ?? '',
+  emailFrom: process.env.EMAIL_FROM ?? 'no-reply@finportal.example',
 } as const;
 
 // Validate everything eagerly so misconfig surfaces on startup.

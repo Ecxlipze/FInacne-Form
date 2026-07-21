@@ -9,18 +9,30 @@ import type { DraftInput, ApplicationInput } from '@finportal/shared';
 type FormData = Record<string, unknown>;
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 type Phase = 'form' | 'review' | 'done';
+type LaterState = 'idle' | 'sending' | 'sent' | 'error';
 
-export default function Wizard() {
+export default function Wizard({
+  initialData,
+  initialAppId,
+}: {
+  initialData?: FormData;
+  initialAppId?: string;
+}) {
   const [phase, setPhase] = useState<Phase>('form');
   const [index, setIndex] = useState(0);
-  const [data, setData] = useState<FormData>({});
-  const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const [data, setData] = useState<FormData>(initialData ?? {});
+  const [completed, setCompleted] = useState<Set<number>>(
+    () => new Set(STEPS.map((s, i) => (initialData?.[s.key] ? i : -1)).filter((i) => i >= 0))
+  );
   const [saveState, setSaveState] = useState<SaveState>('idle');
-  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [applicationId, setApplicationId] = useState<string | null>(initialAppId ?? null);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [reference, setReference] = useState<string | null>(null);
+
+  const [later, setLater] = useState<LaterState>('idle');
+  const [laterLink, setLaterLink] = useState<string | null>(null);
 
   const step = STEPS[index];
   const isFirst = index === 0;
@@ -51,6 +63,18 @@ export default function Wizard() {
     [data, step.key, index, isLast, persist]
   );
 
+  const handleFinishLater = useCallback(async () => {
+    if (!applicationId) return;
+    setLater('sending');
+    try {
+      const res = await api.sendResumeLink(applicationId);
+      setLater('sent');
+      if (res.token) setLaterLink(`${window.location.origin}/resume?token=${encodeURIComponent(res.token)}`);
+    } catch {
+      setLater('error');
+    }
+  }, [applicationId]);
+
   const handleSubmit = useCallback(
     async (captchaToken: string) => {
       setSubmitting(true);
@@ -78,12 +102,12 @@ export default function Wizard() {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-verify text-white text-2xl">
-          ✓
+          &#10003;
         </div>
         <h1 className="font-serif text-3xl text-ink">Application submitted</h1>
         <p className="mt-3 text-muted">
-          Your reference number is <span className="font-medium text-ink">{reference}</span>. Keep it
-          for your records — we&rsquo;ll be in touch about next steps.
+          Your reference number is <span className="font-medium text-ink">{reference}</span>. We&rsquo;ve
+          emailed a confirmation; please keep the reference for your records.
         </p>
       </div>
     );
@@ -111,8 +135,33 @@ export default function Wizard() {
         <ProgressRail currentIndex={index} completed={completed} onJump={setIndex} />
         <p className="mt-6 flex items-start gap-2 text-xs text-muted">
           <span aria-hidden>&#128274;</span>
-          Your answers are encrypted and saved as you go. You can leave and resume later.
+          Your answers are encrypted and saved as you go.
         </p>
+        <div className="mt-4">
+          <button
+            type="button"
+            className="text-sm text-verify underline disabled:text-muted disabled:no-underline"
+            onClick={handleFinishLater}
+            disabled={!applicationId || later === 'sending'}
+            title={!applicationId ? 'Complete the personal section first' : undefined}
+          >
+            {later === 'sending' ? 'Sending link…' : 'Save and finish later'}
+          </button>
+          {later === 'sent' && (
+            <p className="mt-2 text-xs text-muted">
+              We&rsquo;ve emailed you a secure link to continue.
+              {laterLink && (
+                <>
+                  {' '}
+                  <a href={laterLink} className="text-verify underline">
+                    Dev link
+                  </a>
+                </>
+              )}
+            </p>
+          )}
+          {later === 'error' && <p className="mt-2 text-xs text-danger">Couldn&rsquo;t send the link.</p>}
+        </div>
       </aside>
 
       <main>
